@@ -10,8 +10,14 @@ import {
   dbCrearGrupoRegional,
   dbActualizarGrupoRegional,
   dbEliminarGrupoRegional,
+  dbGetPlantas,
+  dbCrearPlanta,
+  dbActualizarPlanta,
+  dbEliminarPlanta,
   type NuevoIncidente,
-  type GrupoRegional
+  type GrupoRegional,
+  type Planta,
+  type NuevaPlanta
 } from "@/lib/db"
 import type { CategoriaId, Incidente } from "@/lib/incidentes"
 import { uploadFlyerToS3, deleteFlyerFromS3 } from "@/lib/s3"
@@ -101,4 +107,24 @@ export async function actualizarGrupoRegional(id: string, nombre: string, depart
 
 export async function eliminarGrupoRegional(id: string): Promise<void> {
   return dbEliminarGrupoRegional(id)
+}
+
+// ==========================================
+// PLANTAS
+// ==========================================
+
+export async function getPlantas(): Promise<Planta[]> {
+  return dbGetPlantas()
+}
+
+export async function crearPlanta(data: Partial<NuevaPlanta> = {}): Promise<Planta> {
+  return dbCrearPlanta(data)
+}
+
+export async function actualizarPlanta(id: string, data: Partial<NuevaPlanta>): Promise<Planta> {
+  return dbActualizarPlanta(id, data)
+}
+
+export async function eliminarPlanta(id: string): Promise<void> {
+  return dbEliminarPlanta(id)
 }

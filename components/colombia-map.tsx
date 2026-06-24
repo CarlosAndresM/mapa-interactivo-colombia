@@ -7,6 +7,8 @@ import { geoMercator, geoCentroid } from "d3-geo"
 import { feature } from "topojson-client"
 import { ArrowLeft, Building2 } from "lucide-react"
 import { capitalizar, normalizarRegion } from "@/lib/incidentes"
+import { type Planta, type NuevaPlanta } from "@/lib/db"
+import { PlantaOverlay } from "./planta-overlay"
 
 const W = 800
 const H = 760
@@ -28,6 +30,10 @@ interface ColombiaMapProps {
   maxRegion: number
   colorActivo: string
   onVerDepartamento: (region: string) => void
+  plantas?: Planta[]
+  modoPlantas?: boolean
+  onUpdatePlanta?: (id: string, data: Partial<NuevaPlanta>) => void
+  onDeletePlanta?: (id: string) => void
 }
 
 export function ColombiaMap({
@@ -35,6 +41,10 @@ export function ColombiaMap({
   maxRegion,
   colorActivo,
   onVerDepartamento,
+  plantas = [],
+  modoPlantas = false,
+  onUpdatePlanta,
+  onDeletePlanta,
 }: ColombiaMapProps) {
   const { data: geo } = useSWR("geo", loadGeo, { revalidateOnFocus: false })
   const [hover, setHover] = useState<{ nombre: string; count: number } | null>(null)
@@ -76,74 +86,92 @@ export function ColombiaMap({
               onMoveEnd={(pos) => setPosition(pos)}
               translateExtent={[[0, 0], [W, H]]}
             >
-          <Geographies geography={geo}>
-            {({ geographies }) => (
-              <>
-                {geographies.map((g: any) => {
-                  const nombre = normalizarRegion(String(g.properties.NOMBRE_DPT))
-                  const count = conteoRegion[nombre] ?? 0
-                  const s = estilo(count, maxRegion)
-                  return (
-                    <Geography
-                      key={g.rsmKey}
-                      geography={g}
-                      onMouseEnter={() => setHover({ nombre, count })}
-                      onMouseLeave={() => setHover(null)}
-                      onClick={() => onVerDepartamento(nombre)}
-                      style={{
-                        default: {
-                          fill: s.fill,
-                          fillOpacity: s.fillOpacity,
-                          stroke: "#000",
-                          strokeWidth: 0.75,
-                          outline: "none",
-                          transition: "fill-opacity 150ms, filter 150ms",
-                        },
-                        hover: {
-                          fill: s.fill,
-                          fillOpacity: Math.min(1, s.fillOpacity + 0.1),
-                          stroke: "var(--color-foreground)",
-                          strokeWidth: 1.25,
-                          outline: "none",
-                          cursor: "pointer",
-                          filter: "brightness(1.05)",
-                        },
-                        pressed: { fill: s.fill, fillOpacity: 1, outline: "none" },
-                      }}
-                    />
-                  )
-                })}
-                {geographies.map((g) => {
-                  const nombre = normalizarRegion(String(g.properties.NOMBRE_DPT))
-                  const count = conteoRegion[nombre] ?? 0
-                  const centroid = geoCentroid(g)
-                  const isHovered = hover?.nombre === nombre
-                  return (
-                    <Marker key={`label-${g.rsmKey}`} coordinates={centroid}>
-                      <text
-                        className="transition-opacity duration-200"
-                        textAnchor="middle"
-                        y={3}
-                        style={{
-                          fontFamily: "var(--font-sans)",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          fill: "#000",
-                          pointerEvents: "none",
-                          textShadow: "1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)"
-                        }}
-                      >
-                        <tspan className={isHovered ? "" : "max-md:inline md:hidden"}>
-                          {nombre === "san andres providencia y santa catalina" ? "San Andrés" : capitalizar(nombre)} -{" "}
-                        </tspan>
-                        <tspan>{count}</tspan>
-                      </text>
-                    </Marker>
-                  )
-                })}
-              </>
-            )}
-          </Geographies>
+              <Geographies geography={geo}>
+                {({ geographies }) => (
+                  <>
+                    {geographies.map((g: any) => {
+                      const nombre = normalizarRegion(String(g.properties.NOMBRE_DPT))
+                      const count = conteoRegion[nombre] ?? 0
+                      const s = estilo(count, maxRegion)
+                      return (
+                        <Geography
+                          key={g.rsmKey}
+                          geography={g}
+                          onMouseEnter={() => setHover({ nombre, count })}
+                          onMouseLeave={() => setHover(null)}
+                          onClick={() => onVerDepartamento(nombre)}
+                          style={{
+                            default: {
+                              fill: s.fill,
+                              fillOpacity: s.fillOpacity,
+                              stroke: "#000",
+                              strokeWidth: 0.75,
+                              outline: "none",
+                              transition: "fill-opacity 150ms, filter 150ms",
+                            },
+                            hover: {
+                              fill: s.fill,
+                              fillOpacity: Math.min(1, s.fillOpacity + 0.1),
+                              stroke: "var(--color-foreground)",
+                              strokeWidth: 1.25,
+                              outline: "none",
+                              cursor: "pointer",
+                              filter: "brightness(1.05)",
+                            },
+                            pressed: { fill: s.fill, fillOpacity: 1, outline: "none" },
+                          }}
+                        />
+                      )
+                    })}
+                    {geographies.map((g) => {
+                      const nombre = normalizarRegion(String(g.properties.NOMBRE_DPT))
+                      const count = conteoRegion[nombre] ?? 0
+                      const centroid = geoCentroid(g)
+                      const isHovered = hover?.nombre === nombre
+                      return (
+                        <Marker key={`label-${g.rsmKey}`} coordinates={centroid}>
+                          <text
+                            className="transition-opacity duration-200"
+                            textAnchor="middle"
+                            y={3}
+                            style={{
+                              fontFamily: "var(--font-sans)",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              fill: "#000",
+                              pointerEvents: "none",
+                              textShadow: "1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)"
+                            }}
+                          >
+                            <tspan className={isHovered ? "" : "max-md:inline md:hidden"}>
+                              {nombre === "san andres providencia y santa catalina" ? "San Andrés" : capitalizar(nombre)} -{" "}
+                            </tspan>
+                            <tspan>{count}</tspan>
+                          </text>
+                        </Marker>
+                      )
+                    })}
+                  </>
+                )}
+              </Geographies>
+
+              {/* OVERLAYS DE NOTAS */}
+              {modoPlantas && plantas && plantas.length > 0 && (
+                <foreignObject x={0} y={0} width={W} height={H} style={{ pointerEvents: "none" }}>
+                  <div style={{ position: "relative", width: "100%", height: "100%", pointerEvents: "none" }}>
+                    {plantas.map(planta => (
+                      <div key={planta.id} style={{ pointerEvents: "auto" }}>
+                        <PlantaOverlay 
+                          planta={planta} 
+                          onUpdate={onUpdatePlanta!}
+                          onDelete={onDeletePlanta!}
+                          scale={position.zoom}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </foreignObject>
+              )}
             </ZoomableGroup>
           </ComposableMap>
         </div>

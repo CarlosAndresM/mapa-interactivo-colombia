@@ -47,6 +47,18 @@ async function initSchema(): Promise<void> {
       departamentos text[] NOT NULL DEFAULT '{}',
       created_at timestamptz NOT NULL DEFAULT now()
     );
+
+    CREATE TABLE IF NOT EXISTS plantas (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      titulo text NOT NULL DEFAULT '',
+      contenido text NOT NULL DEFAULT '',
+      color text NOT NULL DEFAULT '#ffffff',
+      pos_x integer NOT NULL DEFAULT 100,
+      pos_y integer NOT NULL DEFAULT 100,
+      width integer NOT NULL DEFAULT 300,
+      height integer NOT NULL DEFAULT 200,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
   `)
 
   const { rows } = await pool.query<{ count: string }>("SELECT count(*)::int AS count FROM incidentes")
@@ -80,6 +92,11 @@ export function ensureSchema(): Promise<void> {
     })
   }
   return globalForPg._schemaReady
+}
+
+export async function forceInitSchema(): Promise<void> {
+  globalForPg._schemaReady = undefined
+  await ensureSchema()
 }
 
 export async function dbGetIncidentes(): Promise<Incidente[]> {
@@ -254,4 +271,120 @@ export async function dbActualizarGrupoRegional(id: string, nombre: string, depa
   if (rows.length === 0) throw new Error("Grupo regional no encontrado")
   const r = rows[0]
   return { id: String(r.id), nombre: r.nombre, departamentos: r.departamentos }
+}
+
+// ==========================================
+// PLANTAS (OVERLAYS)
+// ==========================================
+
+export interface Planta {
+  id: string
+  titulo: string
+  contenido: string
+  color: string
+  pos_x: number
+  pos_y: number
+  width: number
+  height: number
+}
+
+export type NuevaPlanta = Omit<Planta, "id">
+
+export async function dbGetPlantas(): Promise<Planta[]> {
+  await ensureSchema()
+  const pool = getPool()
+  const { rows } = await pool.query(
+    `SELECT id, titulo, contenido, color, pos_x, pos_y, width, height
+     FROM plantas
+     ORDER BY created_at ASC`,
+  )
+  return rows.map((r) => ({
+    id: String(r.id),
+    titulo: r.titulo,
+    contenido: r.contenido,
+    color: r.color,
+    pos_x: Number(r.pos_x),
+    pos_y: Number(r.pos_y),
+    width: Number(r.width),
+    height: Number(r.height),
+  }))
+}
+
+export async function dbCrearPlanta(data: Partial<NuevaPlanta> = {}): Promise<Planta> {
+  await ensureSchema()
+  const pool = getPool()
+  const { rows } = await pool.query(
+    `INSERT INTO plantas (titulo, contenido, color, pos_x, pos_y, width, height)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, titulo, contenido, color, pos_x, pos_y, width, height`,
+    [
+      data.titulo ?? "Nueva Planta",
+      data.contenido ?? "Descripción o contenido...",
+      data.color ?? "#ffffff",
+      data.pos_x ?? 100,
+      data.pos_y ?? 100,
+      data.width ?? 300,
+      data.height ?? 200,
+    ]
+  )
+  const r = rows[0]
+  return {
+    id: String(r.id),
+    titulo: r.titulo,
+    contenido: r.contenido,
+    color: r.color,
+    pos_x: Number(r.pos_x),
+    pos_y: Number(r.pos_y),
+    width: Number(r.width),
+    height: Number(r.height),
+  }
+}
+
+export async function dbActualizarPlanta(id: string, data: Partial<NuevaPlanta>): Promise<Planta> {
+  await ensureSchema()
+  const pool = getPool()
+  
+  // Dynamic update query builder since data is Partial
+  const updates = []
+  const values = [id]
+  let idx = 2
+  
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      updates.push(`${key} = $${idx}`)
+      values.push(value as any)
+      idx++
+    }
+  }
+
+  if (updates.length === 0) {
+    throw new Error("No fields to update")
+  }
+
+  const { rows } = await pool.query(
+    `UPDATE plantas 
+     SET ${updates.join(', ')}
+     WHERE id = $1
+     RETURNING id, titulo, contenido, color, pos_x, pos_y, width, height`,
+    values
+  )
+  
+  if (rows.length === 0) throw new Error("Planta no encontrada")
+  const r = rows[0]
+  return {
+    id: String(r.id),
+    titulo: r.titulo,
+    contenido: r.contenido,
+    color: r.color,
+    pos_x: Number(r.pos_x),
+    pos_y: Number(r.pos_y),
+    width: Number(r.width),
+    height: Number(r.height),
+  }
+}
+
+export async function dbEliminarPlanta(id: string): Promise<void> {
+  await ensureSchema()
+  const pool = getPool()
+  await pool.query("DELETE FROM plantas WHERE id = $1", [id])
 }
