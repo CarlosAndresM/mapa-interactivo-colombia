@@ -127,7 +127,7 @@ export function ColombiaMap({
                         }}
                       >
                         <tspan className={isHovered ? "" : "max-md:inline md:hidden"}>
-                          {capitalizar(nombre)} -{" "}
+                          {nombre === "san andres providencia y santa catalina" ? "San Andrés" : capitalizar(nombre)} -{" "}
                         </tspan>
                         <tspan>{count}</tspan>
                       </text>
