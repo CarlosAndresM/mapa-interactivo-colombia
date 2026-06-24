@@ -1,6 +1,6 @@
 import "server-only"
 import { Pool } from "pg"
-import { INCIDENTES_SEED, normalizarRegion, type Incidente } from "./incidentes"
+import { INCIDENTES_SEED, normalizarRegion, type Incidente, type GrupoRegional } from "./incidentes"
 
 // NOTA: credenciales embebidas a peticion explicita del usuario (proyecto temporal/abierto).
 // La contraseña va con el caracter "&" codificado como %26 en la cadena de conexion.
@@ -38,6 +38,13 @@ async function initSchema(): Promise<void> {
       descripcion text,
       flyer_url text,
       fecha date NOT NULL DEFAULT CURRENT_DATE,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS grupos_regionales (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      nombre text NOT NULL UNIQUE,
+      departamentos text[] NOT NULL DEFAULT '{}',
       created_at timestamptz NOT NULL DEFAULT now()
     );
   `)
@@ -199,4 +206,52 @@ export async function dbActualizarIncidente(id: string, data: NuevoIncidente): P
     flyer_url: r.flyer_url ?? null,
     fecha: r.fecha,
   } as Incidente
+}
+export async function dbGetGruposRegionales(): Promise<GrupoRegional[]> {
+  await ensureSchema()
+  const pool = getPool()
+  const { rows } = await pool.query(
+    `SELECT id, nombre, departamentos
+     FROM grupos_regionales
+     ORDER BY nombre ASC`,
+  )
+  return rows.map((r) => ({
+    id: String(r.id),
+    nombre: r.nombre,
+    departamentos: r.departamentos,
+  })) as GrupoRegional[]
+}
+
+export async function dbCrearGrupoRegional(nombre: string, departamentos: string[]): Promise<GrupoRegional> {
+  await ensureSchema()
+  const pool = getPool()
+  const { rows } = await pool.query(
+    `INSERT INTO grupos_regionales (nombre, departamentos)
+     VALUES ($1,$2)
+     RETURNING id, nombre, departamentos`,
+    [nombre, departamentos]
+  )
+  const r = rows[0]
+  return { id: String(r.id), nombre: r.nombre, departamentos: r.departamentos }
+}
+
+export async function dbEliminarGrupoRegional(id: string): Promise<void> {
+  await ensureSchema()
+  const pool = getPool()
+  await pool.query("DELETE FROM grupos_regionales WHERE id = $1", [id])
+}
+
+export async function dbActualizarGrupoRegional(id: string, nombre: string, departamentos: string[]): Promise<GrupoRegional> {
+  await ensureSchema()
+  const pool = getPool()
+  const { rows } = await pool.query(
+    `UPDATE grupos_regionales 
+     SET nombre = $1, departamentos = $2
+     WHERE id = $3
+     RETURNING id, nombre, departamentos`,
+    [nombre, departamentos, id]
+  )
+  if (rows.length === 0) throw new Error("Grupo regional no encontrado")
+  const r = rows[0]
+  return { id: String(r.id), nombre: r.nombre, departamentos: r.departamentos }
 }

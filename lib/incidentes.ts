@@ -9,12 +9,6 @@ export interface Categoria {
 
 export const CATEGORIAS: Categoria[] = [
   {
-    id: "fake_news",
-    nombre: "Fake News",
-    descripcion: "Desinformacion y noticias falsas en circulacion",
-    color: "#2563eb", // azul
-  },
-  {
     id: "bloqueo_vias",
     nombre: "Bloqueo de vias",
     descripcion: "Cierres y bloqueos en corredores viales",
@@ -25,6 +19,12 @@ export const CATEGORIAS: Categoria[] = [
     nombre: "Manifestaciones",
     descripcion: "Marchas, plantones y concentraciones",
     color: "#dc2626", // rojo
+  },
+  {
+    id: "fake_news",
+    nombre: "Fake News",
+    descripcion: "Desinformacion y noticias falsas en circulacion",
+    color: "#2563eb", // azul
   },
 ]
 
@@ -78,6 +78,12 @@ export interface Incidente {
   descripcion: string
   flyer_url: string | null
   fecha: string
+}
+
+export interface GrupoRegional {
+  id: string
+  nombre: string
+  departamentos: string[]
 }
 
 // Normaliza nombres (departamentos y ciudades) para hacer match con el GeoJSON.

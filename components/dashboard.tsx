@@ -7,20 +7,31 @@ import { MetricsPanel } from "./metrics-panel"
 import { RegionModal } from "./region-modal"
 import { AdminGestor } from "./admin-gestor"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   CATEGORIAS,
   getCategoria,
   normalizarRegion,
   capitalizar,
   type CategoriaId,
   type Incidente,
+  type GrupoRegional
 } from "@/lib/incidentes"
-import { getIncidentes } from "@/app/actions"
+import { getIncidentes, getGruposRegionales } from "@/app/actions"
 
 const COLOR_TOTAL = "#334155" // slate, para la vista "todas"
 
 export function Dashboard() {
-  const { data: incidentes = [], isLoading, mutate } = useSWR<Incidente[]>("incidentes", getIncidentes)
+  const { data: incidentes = [], isLoading, mutate: mutateIncidentes } = useSWR<Incidente[]>("incidentes", getIncidentes)
+  const { data: grupos = [], mutate: mutateGrupos } = useSWR<GrupoRegional[]>("grupos", getGruposRegionales)
+  
   const [categoriaActiva, setCategoriaActiva] = useState<CategoriaId | "todas">("todas")
+  const [grupoActivoId, setGrupoActivoId] = useState<string | "todos">("todos")
   const [regionSeleccionada, setRegionSeleccionada] = useState<string | null>(null)
   const [showAdmin, setShowAdmin] = useState(false)
 
@@ -59,18 +70,27 @@ export function Dashboard() {
     [incidentes],
   )
 
+  // 1. Filtrar por Grupo Regional
+  const incidentesGrupo = useMemo(() => {
+    if (grupoActivoId === "todos") return incidentesNorm
+    const grupo = grupos.find(g => g.id === grupoActivoId)
+    if (!grupo) return incidentesNorm
+    return incidentesNorm.filter(i => grupo.departamentos.includes(i.region))
+  }, [incidentesNorm, grupoActivoId, grupos])
+
+  // 2. Calcular metricas para el panel basado en incidentesGrupo
   const conteoPorCategoria = useMemo(() => {
     const base: Record<CategoriaId, number> = { fake_news: 0, bloqueo_vias: 0, manifestaciones: 0 }
-    for (const inc of incidentesNorm) base[inc.categoria] = (base[inc.categoria] ?? 0) + 1
+    for (const inc of incidentesGrupo) base[inc.categoria] = (base[inc.categoria] ?? 0) + 1
     return base
-  }, [incidentesNorm])
+  }, [incidentesGrupo])
 
-  const total = incidentesNorm.length
+  const total = incidentesGrupo.length
 
-  // Conteo por region segun la categoria activa.
+  // 3. Conteo por region (para el mapa) segun la categoria activa y el grupo activo
   const { conteoPorRegion, maxConteoRegion } = useMemo(() => {
     const filtrados =
-      categoriaActiva === "todas" ? incidentesNorm : incidentesNorm.filter((i) => i.categoria === categoriaActiva)
+      categoriaActiva === "todas" ? incidentesGrupo : incidentesGrupo.filter((i) => i.categoria === categoriaActiva)
     const cRegion: Record<string, number> = {}
     
     for (const inc of filtrados) {
@@ -80,18 +100,18 @@ export function Dashboard() {
     const mRegion = Object.values(cRegion).reduce((m, v) => Math.max(m, v), 0)
     
     return { conteoPorRegion: cRegion, maxConteoRegion: mRegion }
-  }, [incidentesNorm, categoriaActiva])
+  }, [incidentesGrupo, categoriaActiva])
 
   const colorActivo = categoriaActiva === "todas" ? COLOR_TOTAL : getCategoria(categoriaActiva).color
 
   const incidentesFiltradosModal = useMemo(() => {
     if (!regionSeleccionada) return []
-    return incidentesNorm.filter(
+    return incidentesGrupo.filter(
       (i) =>
         i.region === regionSeleccionada &&
         (categoriaActiva === "todas" || i.categoria === categoriaActiva),
     )
-  }, [incidentesNorm, regionSeleccionada, categoriaActiva])
+  }, [incidentesGrupo, regionSeleccionada, categoriaActiva])
 
   const modalTitulo = useMemo(() => {
     if (!regionSeleccionada) return null
@@ -112,15 +132,34 @@ export function Dashboard() {
       </header>
 
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-        {/* Panel de Metricas: horizontal (scroll) en móvil, vertical (sidebar) en PC */}
-        <aside className="shrink-0 border-b border-border bg-background p-4 lg:w-[320px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
-          <h2 className="mb-3 hidden text-sm font-medium uppercase tracking-wide text-muted-foreground lg:block">Categorias</h2>
-          <MetricsPanel
-            conteoPorCategoria={conteoPorCategoria}
-            total={total}
-            categoriaActiva={categoriaActiva}
-            onSelectCategoria={setCategoriaActiva}
-          />
+        {/* Panel de Metricas */}
+        <aside className="shrink-0 border-b border-border bg-background p-4 lg:w-[320px] lg:border-b-0 lg:border-r lg:overflow-y-auto flex flex-col gap-6">
+          
+          {/* Filtro de Grupos Regionales */}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Filtro Regional</h2>
+            <Select value={grupoActivoId} onValueChange={setGrupoActivoId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecciona un grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Toda Colombia</SelectItem>
+                {grupos.map(g => (
+                  <SelectItem key={g.id} value={g.id}>{g.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <h2 className="mb-3 hidden text-sm font-medium uppercase tracking-wide text-muted-foreground lg:block">Categorias</h2>
+            <MetricsPanel
+              conteoPorCategoria={conteoPorCategoria}
+              total={total}
+              categoriaActiva={categoriaActiva}
+              onSelectCategoria={setCategoriaActiva}
+            />
+          </div>
         </aside>
 
         <section className="relative flex flex-1 flex-col overflow-hidden bg-card">
@@ -162,7 +201,10 @@ export function Dashboard() {
         open={showAdmin}
         onClose={() => setShowAdmin(false)}
         incidentes={incidentesNorm}
-        onChanged={() => mutate()}
+        onChanged={() => {
+          mutateIncidentes()
+          mutateGrupos()
+        }}
       />
     </main>
   )

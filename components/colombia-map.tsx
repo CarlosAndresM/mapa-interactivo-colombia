@@ -61,8 +61,8 @@ export function ColombiaMap({
   return (
     <div className="relative flex h-full w-full flex-col select-none">
 
-      <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4">
-        <div className="h-full min-w-[600px] md:min-w-0">
+      <div className="flex-1 w-full h-full pb-4">
+        <div className="w-full h-full">
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{ center: [-72.5, 4.2], scale: 2200 }}

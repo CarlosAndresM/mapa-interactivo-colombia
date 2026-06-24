@@ -1,6 +1,18 @@
 "use server"
 
-import { dbCrearIncidente, dbEliminarIncidente, dbGetIncidentes, dbActualizarIncidente, dbGetIncidenteById, type NuevoIncidente } from "@/lib/db"
+import { 
+  dbCrearIncidente, 
+  dbEliminarIncidente, 
+  dbGetIncidentes, 
+  dbActualizarIncidente, 
+  dbGetIncidenteById, 
+  dbGetGruposRegionales,
+  dbCrearGrupoRegional,
+  dbActualizarGrupoRegional,
+  dbEliminarGrupoRegional,
+  type NuevoIncidente,
+  type GrupoRegional
+} from "@/lib/db"
 import type { CategoriaId, Incidente } from "@/lib/incidentes"
 import { uploadFlyerToS3, deleteFlyerFromS3 } from "@/lib/s3"
 
@@ -71,4 +83,22 @@ export async function uploadFlyerAction(formData: FormData): Promise<string> {
   const file = formData.get("flyer") as File
   if (!file) throw new Error("No se envio ningun archivo")
   return uploadFlyerToS3(file)
+}
+
+export async function getGruposRegionales(): Promise<GrupoRegional[]> {
+  return dbGetGruposRegionales()
+}
+
+export async function crearGrupoRegional(nombre: string, departamentos: string[]): Promise<GrupoRegional> {
+  if (!nombre?.trim()) throw new Error("El nombre del grupo es obligatorio")
+  return dbCrearGrupoRegional(nombre.trim(), departamentos)
+}
+
+export async function actualizarGrupoRegional(id: string, nombre: string, departamentos: string[]): Promise<GrupoRegional> {
+  if (!nombre?.trim()) throw new Error("El nombre del grupo es obligatorio")
+  return dbActualizarGrupoRegional(id, nombre.trim(), departamentos)
+}
+
+export async function eliminarGrupoRegional(id: string): Promise<void> {
+  return dbEliminarGrupoRegional(id)
 }
