@@ -38,7 +38,7 @@ export function ColombiaMap({
 }: ColombiaMapProps) {
   const { data: geo } = useSWR("geo", loadGeo, { revalidateOnFocus: false })
   const [hover, setHover] = useState<{ nombre: string; count: number } | null>(null)
-  const [position, setPosition] = useState({ coordinates: [-74, 4.2] as [number, number], zoom: 1 })
+  const [position, setPosition] = useState({ coordinates: [-72.5, 4.2] as [number, number], zoom: 1 })
 
   function estilo(count: number, max: number) {
     const tieneDatos = count > 0
@@ -65,7 +65,7 @@ export function ColombiaMap({
         <div className="h-full min-w-[600px] md:min-w-0">
           <ComposableMap
             projection="geoMercator"
-            projectionConfig={{ center: [-74, 4.2], scale: 2200 }}
+            projectionConfig={{ center: [-72.5, 4.2], scale: 2200 }}
             width={W}
             height={H}
             style={{ width: "100%", height: "100%" }}
