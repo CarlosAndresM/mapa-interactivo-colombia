@@ -100,14 +100,13 @@ export function Dashboard() {
 
   return (
     <main className="flex h-[100dvh] flex-col overflow-hidden bg-background">
-      <header className="shrink-0 border-b border-border">
-        <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 sm:px-6">
-          <h1 className="text-balance text-xl font-semibold text-foreground sm:text-2xl">
-            Monitoreo de situaciones en Colombia
+      <header className="shrink-0 bg-[#0A1B3F] shadow-md">
+        <div className="mx-auto flex max-w-7xl flex-col gap-0.5 px-4 py-4 sm:px-6">
+          <h1 className="text-balance text-xl font-bold uppercase text-white sm:text-2xl md:text-3xl leading-tight">
+            Informe manifestaciones, concentraciones y bloqueo de vias
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Mapa de calor por region. Selecciona una categoria para filtrar y haz clic en un departamento para ver los
-            reportes.
+          <p className="text-sm md:text-base font-bold text-[#C4E510] uppercase tracking-wide">
+            Seguimiento post electoral
           </p>
         </div>
       </header>
