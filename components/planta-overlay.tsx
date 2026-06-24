@@ -30,28 +30,33 @@ export function PlantaOverlay({ planta, onUpdate, onDelete, scale = 1 }: PlantaO
   const [isDirty, setIsDirty] = useState(false)
 
   const handleDragStop = (e: any, d: any) => {
-    if (d.x === localData.pos_x && d.y === localData.pos_y) return
-    const newData = { ...localData, pos_x: d.x, pos_y: d.y }
+    const newX = Math.round(d.x)
+    const newY = Math.round(d.y)
+    if (newX === localData.pos_x && newY === localData.pos_y) return
+    const newData = { ...localData, pos_x: newX, pos_y: newY }
     setLocalData(newData)
-    onUpdate(planta.id, { pos_x: d.x, pos_y: d.y })
+    onUpdate(planta.id, { pos_x: newX, pos_y: newY })
   }
 
   const handleResizeStop = (e: any, direction: any, ref: any, delta: any, position: any) => {
-    const newWidth = parseInt(ref.style.width, 10)
-    const newHeight = parseInt(ref.style.height, 10)
+    const newWidth = Math.round(parseInt(ref.style.width, 10))
+    const newHeight = Math.round(parseInt(ref.style.height, 10))
+    const newX = Math.round(position.x)
+    const newY = Math.round(position.y)
+    
     const newData = {
       ...localData,
       width: newWidth,
       height: newHeight,
-      pos_x: position.x,
-      pos_y: position.y,
+      pos_x: newX,
+      pos_y: newY,
     }
     setLocalData(newData)
     onUpdate(planta.id, {
       width: newWidth,
       height: newHeight,
-      pos_x: position.x,
-      pos_y: position.y,
+      pos_x: newX,
+      pos_y: newY,
     })
   }
 

@@ -174,7 +174,11 @@ export function Dashboard() {
             <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Filtro Regional</h2>
             <Select value={grupoActivoId} onValueChange={setGrupoActivoId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un grupo" />
+                <SelectValue placeholder="Selecciona un grupo">
+                  {grupoActivoId === "todos" 
+                    ? "Toda Colombia" 
+                    : grupos.find(g => g.id === grupoActivoId)?.nombre || "Toda Colombia"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Toda Colombia</SelectItem>
@@ -220,7 +224,7 @@ export function Dashboard() {
 
         <section id="map-section" className="relative flex flex-1 flex-col overflow-hidden bg-card">
           {/* Título de la categoría y leyenda superpuestos en el mapa */}
-          <div className="absolute left-4 top-4 z-10 hidden flex-wrap items-center gap-3 rounded-lg border border-border bg-background/80 px-4 py-2 shadow-sm backdrop-blur-md md:flex">
+          <div className="pointer-events-none absolute left-4 top-4 z-10 hidden flex-wrap items-center gap-3 rounded-lg border border-border bg-background/80 px-4 py-2 shadow-sm backdrop-blur-md md:flex">
             <h2 className="font-medium text-foreground">
               {categoriaActiva === "todas" ? "Todas las categorias" : getCategoria(categoriaActiva).nombre}
             </h2>

@@ -50,6 +50,8 @@ export function ColombiaMap({
   const [hover, setHover] = useState<{ nombre: string; count: number } | null>(null)
   const [position, setPosition] = useState({ coordinates: [-72.5, 4.2] as [number, number], zoom: 1 })
 
+  const [hoverNote, setHoverNote] = useState(false)
+
   function estilo(count: number, max: number) {
     const tieneDatos = count > 0
     const intensidad = max > 0 ? count / max : 0
@@ -85,6 +87,10 @@ export function ColombiaMap({
               center={position.coordinates}
               onMoveEnd={(pos) => setPosition(pos)}
               translateExtent={[[0, 0], [W, H]]}
+              filterZoomEvent={(e: any) => {
+                if (hoverNote) return false
+                return (!e.ctrlKey || e.type === "wheel") && !e.button
+              }}
             >
               <Geographies geography={geo}>
                 {({ geographies }) => (
@@ -160,7 +166,12 @@ export function ColombiaMap({
                 <foreignObject x={0} y={0} width={W} height={H} style={{ pointerEvents: "none" }}>
                   <div style={{ position: "relative", width: "100%", height: "100%", pointerEvents: "none" }}>
                     {plantas.map(planta => (
-                      <div key={planta.id} style={{ pointerEvents: "auto" }}>
+                      <div 
+                        key={planta.id} 
+                        style={{ pointerEvents: "auto" }}
+                        onMouseEnter={() => setHoverNote(true)}
+                        onMouseLeave={() => setHoverNote(false)}
+                      >
                         <PlantaOverlay 
                           planta={planta} 
                           onUpdate={onUpdatePlanta!}
