@@ -13,7 +13,14 @@ const H = 760
 const PAD = 24
 
 async function loadGeo(): Promise<any> {
-  return fetch("/geo/colombia.geo.json").then((r) => r.json())
+  const data = await fetch("/geo/colombia.geo.json").then((r) => r.json())
+  if (data && data.features) {
+    data.features = data.features.filter((f: any) => {
+      const nombre = String(f.properties.NOMBRE_DPT).toLowerCase()
+      return !nombre.includes("san andres") && !nombre.includes("providencia")
+    })
+  }
+  return data
 }
 
 interface ColombiaMapProps {
