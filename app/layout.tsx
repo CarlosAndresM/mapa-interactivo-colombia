@@ -13,23 +13,6 @@ export const metadata: Metadata = {
   title: 'Monitoreo de situaciones en Colombia',
   description: 'Mapa de calor de fake news, bloqueos de vias y manifestaciones por region',
   generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
 }
 
 export const viewport: Viewport = {
