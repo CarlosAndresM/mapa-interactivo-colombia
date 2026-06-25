@@ -44,6 +44,26 @@ export function Dashboard() {
 
   const { data: plantas = [], mutate: mutatePlantas } = useSWR<Planta[]>("plantas", getPlantas)
 
+  // -- Gesto secreto en celular (5 toques rapidos) --
+  const [tapCount, setTapCount] = useState(0)
+  const [lastTapTime, setLastTapTime] = useState(0)
+
+  const handleSecretTap = () => {
+    const now = Date.now()
+    if (now - lastTapTime < 500) {
+      const newCount = tapCount + 1
+      if (newCount >= 5) {
+        setShowAdmin(true)
+        setTapCount(0)
+      } else {
+        setTapCount(newCount)
+      }
+    } else {
+      setTapCount(1)
+    }
+    setLastTapTime(now)
+  }
+
   const handleAgregarPlanta = async () => {
     try {
       await crearPlanta({ titulo: "Nueva Nota", color: "#4ade80", pos_x: 50, pos_y: 50 })
@@ -156,7 +176,7 @@ export function Dashboard() {
 
   return (
     <main className="flex h-[100dvh] flex-col overflow-hidden bg-background">
-      <header className="shrink-0 bg-[#0A1B3F] shadow-md">
+      <header className="shrink-0 bg-[#0A1B3F] shadow-md cursor-pointer select-none" onClick={handleSecretTap}>
         <div className="mx-auto flex max-w-7xl flex-col gap-0.5 px-3 py-2 sm:px-6">
           <h1 className="text-center text-xs sm:text-lg font-bold uppercase text-white leading-tight">
             Seguimiento de eventos nacionales

@@ -190,7 +190,7 @@ export function AdminGestor({ open, onClose, incidentes, onChanged }: AdminGesto
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[88vh] gap-0 overflow-y-auto p-0 sm:max-w-4xl">
+      <DialogContent className="max-h-[88vh] w-[95vw] gap-0 overflow-y-auto p-0 sm:max-w-4xl">
         <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle>Gestor de informacion</DialogTitle>
           <DialogDescription>Administra los reportes y grupos regionales del mapa.</DialogDescription>
