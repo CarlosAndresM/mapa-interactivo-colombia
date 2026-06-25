@@ -10,15 +10,15 @@ export interface Categoria {
 export const CATEGORIAS: Categoria[] = [
   {
     id: "bloqueo_vias",
-    nombre: "Bloqueo de vias",
+    nombre: "Estado de vias",
     descripcion: "Cierres y bloqueos en corredores viales",
     color: "#d97706", // ambar
   },
   {
     id: "manifestaciones",
-    nombre: "Manifestaciones",
+    nombre: "Orden publico",
     descripcion: "Marchas, plantones y concentraciones",
-    color: "#dc2626", // rojo
+    color: "#22c55e", // verde
   },
   {
     id: "fake_news",
