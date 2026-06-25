@@ -52,7 +52,7 @@ export function Dashboard() {
     const now = Date.now()
     if (now - lastTapTime < 500) {
       const newCount = tapCount + 1
-      if (newCount >= 5) {
+      if (newCount >= 4) {
         setShowAdmin(true)
         setTapCount(0)
       } else {
