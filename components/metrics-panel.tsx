@@ -14,7 +14,7 @@ export function MetricsPanel({ conteoPorCategoria, total, categoriaActiva, onSel
   return (
     <>
       {/* Vista movil: select nativo ultracompacto */}
-      <div className="w-full pb-2 lg:hidden">
+      <div className="w-full lg:hidden">
         <select
           className="w-full rounded-md border border-border bg-card p-2 text-sm text-foreground focus:border-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/50"
           value={categoriaActiva}

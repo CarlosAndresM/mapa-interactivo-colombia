@@ -10,8 +10,8 @@ import { capitalizar, normalizarRegion } from "@/lib/incidentes"
 import { type Planta, type NuevaPlanta } from "@/lib/db"
 import { PlantaOverlay } from "./planta-overlay"
 
-const W = 800
-const H = 760
+const W = 600
+const H = 800
 const PAD = 24
 
 async function loadGeo(): Promise<any> {
@@ -30,10 +30,6 @@ interface ColombiaMapProps {
   maxRegion: number
   colorActivo: string
   onVerDepartamento: (region: string) => void
-  plantas?: Planta[]
-  modoPlantas?: boolean
-  onUpdatePlanta?: (id: string, data: Partial<NuevaPlanta>) => void
-  onDeletePlanta?: (id: string) => void
 }
 
 export function ColombiaMap({
@@ -41,16 +37,10 @@ export function ColombiaMap({
   maxRegion,
   colorActivo,
   onVerDepartamento,
-  plantas = [],
-  modoPlantas = false,
-  onUpdatePlanta,
-  onDeletePlanta,
 }: ColombiaMapProps) {
   const { data: geo } = useSWR("geo", loadGeo, { revalidateOnFocus: false })
   const [hover, setHover] = useState<{ nombre: string; count: number } | null>(null)
   const [position, setPosition] = useState({ coordinates: [-72.5, 4.2] as [number, number], zoom: 1 })
-
-  const [hoverNote, setHoverNote] = useState(false)
 
   function estilo(count: number, max: number) {
     const tieneDatos = count > 0
@@ -73,13 +63,13 @@ export function ColombiaMap({
   return (
     <div className="relative flex h-full w-full flex-col select-none">
 
-      <div className="flex-1 w-full h-full pb-4">
+      <div className="flex-1 w-full h-full pb-4 overflow-hidden">
         <div className="w-full h-full">
           <ComposableMap
             projection="geoMercator"
-            projectionConfig={{ center: [-72.5, 4.2], scale: 2200 }}
-            width={W}
-            height={H}
+            projectionConfig={{ center: [-73.5, 4.2], scale: 3500 }}
+            width={600}
+            height={800}
             style={{ width: "100%", height: "100%" }}
           >
             <ZoomableGroup
@@ -87,10 +77,6 @@ export function ColombiaMap({
               center={position.coordinates}
               onMoveEnd={(pos) => setPosition(pos)}
               translateExtent={[[0, 0], [W, H]]}
-              filterZoomEvent={(e: any) => {
-                if (hoverNote) return false
-                return (!e.ctrlKey || e.type === "wheel") && !e.button
-              }}
             >
               <Geographies geography={geo}>
                 {({ geographies }) => (
@@ -161,28 +147,6 @@ export function ColombiaMap({
                 )}
               </Geographies>
 
-              {/* OVERLAYS DE NOTAS */}
-              {modoPlantas && plantas && plantas.length > 0 && (
-                <foreignObject x={0} y={0} width={W} height={H} style={{ pointerEvents: "none" }}>
-                  <div style={{ position: "relative", width: "100%", height: "100%", pointerEvents: "none" }}>
-                    {plantas.map(planta => (
-                      <div 
-                        key={planta.id} 
-                        style={{ pointerEvents: "auto" }}
-                        onMouseEnter={() => setHoverNote(true)}
-                        onMouseLeave={() => setHoverNote(false)}
-                      >
-                        <PlantaOverlay 
-                          planta={planta} 
-                          onUpdate={onUpdatePlanta!}
-                          onDelete={onDeletePlanta!}
-                          scale={position.zoom}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </foreignObject>
-              )}
             </ZoomableGroup>
           </ComposableMap>
         </div>

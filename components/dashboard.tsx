@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import useSWR from "swr"
 import { ColombiaMap } from "./colombia-map"
+import { PlantaOverlay } from "./planta-overlay"
 import { MetricsPanel } from "./metrics-panel"
 import { RegionModal } from "./region-modal"
 import { AdminGestor } from "./admin-gestor"
@@ -156,22 +157,19 @@ export function Dashboard() {
   return (
     <main className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       <header className="shrink-0 bg-[#0A1B3F] shadow-md">
-        <div className="mx-auto flex max-w-7xl flex-col gap-0.5 px-4 py-4 sm:px-6">
-          <h1 className="text-balance text-xl font-bold uppercase text-white sm:text-2xl md:text-3xl leading-tight">
-            Informe manifestaciones, concentraciones y bloqueo de vias
+        <div className="mx-auto flex max-w-7xl flex-col gap-0.5 px-3 py-2 sm:px-6">
+          <h1 className="text-center text-xs sm:text-lg font-bold uppercase text-white leading-tight">
+            Seguimiento de eventos nacionales
           </h1>
-          <p className="text-sm md:text-base font-bold text-[#C4E510] uppercase tracking-wide">
-            Seguimiento post electoral
-          </p>
         </div>
       </header>
 
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-        <aside className="shrink-0 border-b border-border bg-background p-4 lg:w-[320px] lg:border-b-0 lg:border-r overflow-y-auto max-h-[45vh] lg:max-h-none flex flex-col gap-6">
+        <aside className="shrink-0 border-b border-border bg-background p-2 lg:p-4 lg:w-[320px] lg:border-b-0 lg:border-r overflow-x-auto lg:overflow-y-auto flex flex-row lg:flex-col gap-3 lg:gap-6 items-center lg:items-stretch scrollbar-hide">
           
           {/* Filtro de Grupos Regionales */}
-          <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Filtro Regional</h2>
+          <div className="flex flex-col gap-2 min-w-[150px] lg:min-w-0">
+            <h2 className="hidden lg:block text-sm font-medium uppercase tracking-wide text-muted-foreground">Filtro Regional</h2>
             <Select value={grupoActivoId} onValueChange={setGrupoActivoId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona un grupo">
@@ -189,7 +187,7 @@ export function Dashboard() {
             </Select>
           </div>
 
-          <div className="pb-8">
+          <div className="min-w-[180px] lg:min-w-0 lg:pb-8">
             <h2 className="mb-3 hidden text-sm font-medium uppercase tracking-wide text-muted-foreground lg:block">Categorias</h2>
             <MetricsPanel
               conteoPorCategoria={conteoPorCategoria}
@@ -200,7 +198,7 @@ export function Dashboard() {
           </div>
 
           {/* MODO PLANTAS */}
-          <div className="flex flex-col gap-4 border-t border-border pt-4 mt-auto">
+          <div className="flex flex-row lg:flex-col items-center lg:items-stretch gap-2 lg:gap-4 lg:border-t lg:border-border lg:pt-4 lg:mt-auto ml-auto lg:ml-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch 
@@ -208,15 +206,15 @@ export function Dashboard() {
                   checked={modoPlantas} 
                   onCheckedChange={setModoPlantas} 
                 />
-                <Label htmlFor="modo-plantas" className="font-medium uppercase tracking-wide">
+                <Label htmlFor="modo-plantas" className="font-medium uppercase tracking-wide whitespace-nowrap">
                   Notas
                 </Label>
               </div>
             </div>
             
             {modoPlantas && (
-              <Button onClick={handleAgregarPlanta} className="w-full gap-2 bg-[#4ade80] hover:bg-[#22c55e] text-black">
-                <Plus className="size-4" /> Agregar Nota
+              <Button onClick={handleAgregarPlanta} className="w-auto lg:w-full gap-2 bg-[#4ade80] hover:bg-[#22c55e] text-black px-3 lg:px-4">
+                <Plus className="size-4" /> <span className="hidden lg:inline">Agregar Nota</span><span className="lg:hidden">Agregar</span>
               </Button>
             )}
           </div>
@@ -244,11 +242,29 @@ export function Dashboard() {
                 onVerDepartamento={(r) => {
                   setRegionSeleccionada(r)
                 }}
-                plantas={plantas}
-                modoPlantas={modoPlantas}
-                onUpdatePlanta={handleUpdatePlanta}
-                onDeletePlanta={handleDeletePlanta}
               />
+            </div>
+          )}
+
+          {/* ZONA INFERIOR DE NOTAS (GRID) */}
+          {modoPlantas && (
+            <div className="border-t border-border bg-muted/20 p-4 overflow-y-auto max-h-[40vh]">
+              {plantas.length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  No hay notas creadas. Haz clic en "Agregar Nota" para comenzar.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {plantas.map(planta => (
+                    <PlantaOverlay 
+                      key={planta.id}
+                      planta={planta} 
+                      onUpdate={handleUpdatePlanta}
+                      onDelete={handleDeletePlanta}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>
