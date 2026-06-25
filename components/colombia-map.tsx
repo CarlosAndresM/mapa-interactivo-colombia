@@ -67,7 +67,7 @@ export function ColombiaMap({
         <div className="w-full h-full">
           <ComposableMap
             projection="geoMercator"
-            projectionConfig={{ center: [-73.5, 4.2], scale: 3500 }}
+            projectionConfig={{ center: [-73.5, 4.2], scale: 3200 }}
             width={600}
             height={800}
             style={{ width: "100%", height: "100%" }}
@@ -76,7 +76,7 @@ export function ColombiaMap({
               zoom={position.zoom}
               center={position.coordinates}
               onMoveEnd={(pos) => setPosition(pos)}
-              translateExtent={[[0, 0], [W, H]]}
+              translateExtent={[[-150, -100], [W + 150, H + 100]]}
             >
               <Geographies geography={geo}>
                 {({ geographies }) => (
